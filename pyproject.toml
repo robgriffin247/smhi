@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "smhi"
+version = "0.1.0"
+description = ""
+authors = ["robgriffin247 <robgriffinwork@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10, <3.13"
+requests = "^2.31.0"
+dlt = {extras = ["duckdb"], version = "^0.4.6"}
+pandas = "^2.2.1"
+streamlit = "^1.32.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
