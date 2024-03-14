@@ -2,7 +2,22 @@
 import requests
 import pandas as pd
 
-def get_metobs_historic(parameter, station):
+def get_recent(parameter, station):
+    url = f'https://opendata-download-metobs.smhi.se/api/version/1.0/parameter/{parameter}/station/{station}/period/latest-months/data.json'
+    response = requests.get(url)
+    if response.status_code == 200:
+        values = response.json()["value"]
+        df = pd.DataFrame.from_dict(values)
+        df["parameter_id"] = parameter
+        df["station_id"] = station
+        return df
+    #else:
+    #    print(f"Returned {response.status_code} for station {station}, parameter {parameter}")
+
+
+
+
+def get_historic(parameter, station):
     url = f"https://opendata-download-metobs.smhi.se/api/version/1.0/parameter/{parameter}/station/{station}/period/corrected-archive/data.csv"
     response = requests.get(url)
     #response.raise_for_status()
