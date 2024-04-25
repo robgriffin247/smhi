@@ -2,45 +2,53 @@ import pandas as pd
 import os.path 
 from stg_stations import stg_stations
 from stg_parameters import stg_parameters
-from get_metobs import get_recent
+from get_metobs import get_recent, get_historic
+
+parameters = [2, 5]
+stations = [82230]
 
 
+# Stations and Parameters data -------------------------------------------------
 if not os.path.isfile("data/stg_stations.csv") or False:
     stg_stations().to_csv("data/stg_stations.csv", index=False)
 
 if not os.path.isfile("data/stg_parameters.csv") or False:
     stg_parameters().to_csv("data/stg_parameters.csv", index=False)
+# ------------------------------------------------------------------------------
 
 
-parameters = [2, # Daily average temperature
-              5, # Daily rainfall
-              4, # Hourly wind speed (10 min average)
-              3, # Hourly wind direction (10 min average)
-              21,# Hourly wind gust strength
-              16,# Hourly cloud coverage (%)
-              10,# Hourly sunshine (seconds)
-              ]
+# Metobs data ------------------------------------------------------------------
+if not os.path.isfile("data/metobs_data.csv") or False:
+    metobs_df = pd.DataFrame.from_dict({"station_id":[], "parameter_id":[]})
+else:
+    metobs_df = pd.read_csv("data/metobs_data.csv")
 
-stations = [82230, # Vänersborg
-            97200, # Sthlm Bromma
-            ]
+for parameter in parameters:
+    for station in stations:
+        if True: #station not in metobs_df["station_id"] and parameter not in metobs_df.loc[metobs_df["station_id"]==station]["parameter_id"]:
+            print(f"Gathering {parameter} for {station}")
+            recent = get_recent(parameter, station)
+            historic = get_historic(parameter, station)
+            metobs_df = pd.concat([metobs_df,
+                                   recent,
+                                   historic],
+                                   ignore_index=True)
+            metobs_df = metobs_df.drop_duplicates()
+            #metobs_df["parameter_id"] = metobs_df["parameter_id"].astype("int")
+            #metobs_df["station_id"] = metobs_df["station_id"].astype("int")
+            metobs_df.to_csv("data/metobs_data.csv", index=False)
+        else:
+            print(f"Data already present for {parameter} at {station}")
 
+print(metobs_df)
+#print(metobs_df["parameter_id"].astype("int").astype("str") + "_"  + metobs_df["station_id"].astype("int").astype("str"))
 
-
-
-
-stations_df = pd.read_csv("data/stg_stations.csv")
-parameters_df = pd.read_csv("data/stg_parameters.csv")
-
-
-#print(stations_df["name"][stations_df["station_id"]==82230].values)
-
-metobs_data = pd.DataFrame.from_dict({})
-for station in stations:
-    station_name = stations_df["name"][stations_df["station_id"]==station].values[0]
-    for parameter in parameters:
-        parameter_name = parameters_df["name"][parameters_df["parameter_id"]==parameter].values[0]
-        print(f"Getting {parameter_name} data for {station_name}")
-        metobs_data = pd.concat([metobs_data, get_recent(parameter, station)], ignore_index=True)
-
-metobs_data.to_csv("data/metobs_data.csv", index=False)
+"""
+[x] Check for metobs_data.csv
+[x] Load if present
+[ ] Check if station and parameter already present
+[ ] Check for last date (run get_recent if > 40 days ago)
+[x] Concat to existing data
+[x] Remove duplicates
+[x] Save on each loop
+"""
